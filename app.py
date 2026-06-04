@@ -1,60 +1,214 @@
+import streamlit as st
 import pandas as pd
 
-# Creating a vast dataset of political and economic measures
-mesures_data = [
-    # FISCALITE - RECETTES
-    {"Categorie": "Fiscalité & Entreprises", "Nom": "Rétablissement de l'ISF", "Impact_Depenses": 0.0, "Impact_Recettes": 3.5, "Description": "Taxation des patrimoines immobiliers et financiers supérieurs à 1,3 M€."},
-    {"Categorie": "Fiscalité & Entreprises", "Nom": "Suppression de la Flat Tax (PFU)", "Impact_Depenses": 0.0, "Impact_Recettes": 1.5, "Description": "Retour au barème progressif de l'impôt pour les revenus du capital."},
-    {"Categorie": "Fiscalité & Entreprises", "Nom": "Taxe sur les superprofits (One-off)", "Impact_Depenses": 0.0, "Impact_Recettes": 12.0, "Description": "Taxation exceptionnelle de 33% sur les bénéfices des énergéticiens et grands groupes."},
-    {"Categorie": "Fiscalité & Entreprises", "Nom": "Baisse des impôts de production (CVAE, C3S)", "Impact_Depenses": 0.0, "Impact_Recettes": -8.0, "Description": "Suppression totale des impôts pesant sur la production des entreprises pour la compétitivité."},
-    {"Categorie": "Fiscalité & Entreprises", "Nom": "TVA à 5,5% sur l'énergie et carburants", "Impact_Depenses": 0.0, "Impact_Recettes": -12.0, "Description": "Baisse de la TVA sur l'essence, le gaz et l'électricité (mesure RN/LFI)."},
-    {"Categorie": "Fiscalité & Entreprises", "Nom": "TVA à 0% sur les produits de première nécessité", "Impact_Depenses": 0.0, "Impact_Recettes": -5.0, "Description": "Suppression de la TVA sur un panier de 100 produits alimentaires et d'hygiène."},
-    {"Categorie": "Fiscalité & Entreprises", "Nom": "Hausse de la TVA normale de 20% à 22%", "Impact_Depenses": 0.0, "Impact_Recettes": 15.0, "Description": "TVA sociale pour financer la protection sociale et baisser les charges pesant sur le travail."},
-    {"Categorie": "Fiscalité & Entreprises", "Nom": "Légalisation et taxation du cannabis", "Impact_Depenses": -0.5, "Impact_Recettes": 2.5, "Description": "Création d'une filière d'État, baisse des frais de justice/police et nouvelles recettes fiscales."},
-    {"Categorie": "Fiscalité & Entreprises", "Nom": "Taxe sur les transactions financières (Tobin)", "Impact_Depenses": 0.0, "Impact_Recettes": 5.0, "Description": "Hausse de la TTF à 0,3% élargie au trading haute fréquence et aux produits dérivés."},
-    {"Categorie": "Fiscalité & Entreprises", "Nom": "Suppression du Crédit Impôt Recherche (CIR)", "Impact_Depenses": 0.0, "Impact_Recettes": 7.0, "Description": "Annulation de cette niche fiscale jugée inefficace pour les grandes entreprises."},
+# Configuration de la page
+st.set_page_config(page_title="Simulateur Budgétaire de Précision", layout="wide")
+
+st.title("🇫🇷 Simulateur d'Arbitrages Budgétaires (en G€)")
+st.write("Ajustez les budgets par paliers de 0,1 G€. Cochez les mesures chocs pour voir l'impact immédiat sur la trajectoire.")
+
+# --- CHARGEMENT DES FICHIERS CSV ---
+@st.cache_data
+def load_base_data():
+    try:
+        return pd.read_csv("nomenclature_budget_france_3.csv")
+    except Exception:
+        st.error("⚠️ Fichier introuvable : 'nomenclature_budget_france_3.csv'")
+        return pd.DataFrame()
+
+@st.cache_data
+def load_mesures_data():
+    try:
+        return pd.read_csv("mesures_chocs_france.csv")
+    except Exception:
+        st.error("⚠️ Fichier introuvable : 'mesures_chocs_france.csv'")
+        return pd.DataFrame()
+
+df = load_base_data()
+df_mesures = load_mesures_data()
+
+df_depenses = df[df["Type"] == "Depense"]
+df_recettes = df[df["Type"] == "Recette"]
+PIB_BASE = 2920.0
+
+# --- INTERFACE EN 2 PANS (FORMULAIRE) ---
+with st.form("simulation_form"):
     
-    # SOCIAL ET RETRAITES
-    {"Categorie": "Social & Retraites", "Nom": "Retraite à 60 ans (40 annuités)", "Impact_Depenses": 15.0, "Impact_Recettes": 0.0, "Description": "Retour à l'âge légal de départ à 60 ans, hausse de la subvention d'équilibre de l'État."},
-    {"Categorie": "Social & Retraites", "Nom": "Retraite à 65 ans", "Impact_Depenses": -8.0, "Impact_Recettes": 0.0, "Description": "Report de l'âge légal pour combler le déficit du système par la baisse des versements."},
-    {"Categorie": "Social & Retraites", "Nom": "Désindexation des retraites sur l'inflation", "Impact_Depenses": -3.5, "Impact_Recettes": 0.0, "Description": "Gel ou sous-indexation des pensions de retraite pour freiner la dynamique des dépenses."},
-    {"Categorie": "Social & Retraites", "Nom": "Revenu universel de base (500€/mois)", "Impact_Depenses": 45.0, "Impact_Recettes": 0.0, "Description": "Versement inconditionnel (net du remplacement du RSA et prime d'activité)."},
-    {"Categorie": "Social & Retraites", "Nom": "Hausse du RSA de 20%", "Impact_Depenses": 2.5, "Impact_Recettes": 0.0, "Description": "Revalorisation des minima sociaux face à l'inflation."},
-    {"Categorie": "Social & Retraites", "Nom": "Conditionnement du RSA à 15h d'activité", "Impact_Depenses": -1.0, "Impact_Recettes": 0.0, "Description": "Baisse du nombre d'allocataires via radiations et meilleur retour à l'emploi."},
-    {"Categorie": "Social & Retraites", "Nom": "Suppression des allocations familiales au-dessus de 5000€/mois", "Impact_Depenses": -0.8, "Impact_Recettes": 0.0, "Description": "Fin de l'universalité des allocs pour les hauts revenus."},
-    {"Categorie": "Social & Retraites", "Nom": "Suppression de l'Aide Médicale d'État (AME)", "Impact_Depenses": -1.2, "Impact_Recettes": 0.0, "Description": "Remplacement par une aide médicale d'urgence stricte (AMU)."},
-
-    # ETAT & FONCTION PUBLIQUE
-    {"Categorie": "État & Fonction Publique", "Nom": "Licenciement de 100 000 fonctionnaires", "Impact_Depenses": -3.0, "Impact_Recettes": 0.0, "Description": "Non-remplacement des départs à la retraite (hors hôpital/sécurité/justice)."},
-    {"Categorie": "État & Fonction Publique", "Nom": "Gel du point d'indice des fonctionnaires", "Impact_Depenses": -2.0, "Impact_Recettes": 0.0, "Description": "Blocage des salaires de la fonction publique (économie annuelle de non-revalorisation)."},
-    {"Categorie": "État & Fonction Publique", "Nom": "Hausse de 10% du salaire des enseignants", "Impact_Depenses": 3.5, "Impact_Recettes": 0.0, "Description": "Choc d'attractivité pour l'Éducation Nationale."},
-    {"Categorie": "État & Fonction Publique", "Nom": "Passage aux 32 heures (Semaine de 4 jours)", "Impact_Depenses": 4.0, "Impact_Recettes": -1.5, "Description": "Embauches supplémentaires dans le public et baisse de cotisations perçues dans le privé."},
-    {"Categorie": "État & Fonction Publique", "Nom": "Baisse des subventions aux associations", "Impact_Depenses": -1.5, "Impact_Recettes": 0.0, "Description": "Coupe budgétaire transversale sur le financement du milieu associatif."},
-    {"Categorie": "État & Fonction Publique", "Nom": "Division par 2 des subventions syndicales et patronales", "Impact_Depenses": -0.1, "Impact_Recettes": 0.0, "Description": "Baisse du financement public des partenaires sociaux."},
-    {"Categorie": "État & Fonction Publique", "Nom": "Suppression du Sénat et du CESE", "Impact_Depenses": -0.4, "Impact_Recettes": 0.0, "Description": "Réforme constitutionnelle pour un parlement monocaméral."},
-
-    # ÉCOLOGIE & MOBILITÉ
-    {"Categorie": "Écologie & Transports", "Nom": "Plan de rénovation thermique massif (1M de logements/an)", "Impact_Depenses": 10.0, "Impact_Recettes": 0.0, "Description": "Prise en charge à 100% pour les plus modestes (reste à charge 0)."},
-    {"Categorie": "Écologie & Transports", "Nom": "Gratuité des transports en commun régionaux", "Impact_Depenses": 3.5, "Impact_Recettes": 0.0, "Description": "Compensation par l'État du manque à gagner pour les régions (TER, métros)."},
-    {"Categorie": "Écologie & Transports", "Nom": "Nationalisation des autoroutes", "Impact_Depenses": 2.5, "Impact_Recettes": 3.0, "Description": "Rachat des concessions (coût amorti sur dette) et récupération des péages (+3G€ recettes)."},
-    {"Categorie": "Écologie & Transports", "Nom": "Taxe carbone aux frontières de la France", "Impact_Depenses": 0.0, "Impact_Recettes": 4.0, "Description": "Taxe douanière sur les produits hors UE fortement émetteurs."},
-    {"Categorie": "Écologie & Transports", "Nom": "Relance d'un programme de 10 nouveaux réacteurs EPR", "Impact_Depenses": 4.0, "Impact_Recettes": 0.0, "Description": "Investissement massif de l'État (via EDF) dans le nucléaire."},
-    {"Categorie": "Écologie & Transports", "Nom": "Suppression des subventions aux énergies fossiles", "Impact_Depenses": -3.5, "Impact_Recettes": 0.0, "Description": "Fin de la détaxation du gazole routier et agricole."},
-
-    # SOUVERAINETÉ, DÉFENSE & EUROPE
-    {"Categorie": "Défense & Souveraineté", "Nom": "Passage du budget de la Défense à 3% du PIB", "Impact_Depenses": 14.0, "Impact_Recettes": 0.0, "Description": "Économie de guerre, réarmement lourd, nouvelles brigades."},
-    {"Categorie": "Défense & Souveraineté", "Nom": "Rétablissement du Service Militaire Obligatoire (6 mois)", "Impact_Depenses": 4.5, "Impact_Recettes": 0.0, "Description": "Encadrement, infrastructures et solde pour l'ensemble d'une classe d'âge."},
-    {"Categorie": "Défense & Souveraineté", "Nom": "Frexit / Baisse contribution à l'UE", "Impact_Depenses": -8.0, "Impact_Recettes": -6.0, "Description": "Baisse de la contribution nette (économie 8G€) mais perte de financements européens (PAC, fonds régionaux)."},
-    {"Categorie": "Défense & Souveraineté", "Nom": "Préférence nationale pour les aides sociales", "Impact_Depenses": -4.0, "Impact_Recettes": 0.0, "Description": "Conditionner les aides familiales et le RSA à 5 ans de présence légale pour les étrangers."},
+    # ⚡ NOUVEAU MODULE DYNAMIQUE : MESURES CHOCS & RÉFORMES
+    st.header("⚡ Bibliothèque de Réformes & Mesures Chocs")
+    st.write("Cochez les mesures de votre programme pour intégrer automatiquement leurs effets sur le budget de l'État.")
     
-    # PRIVATISATIONS
-    {"Categorie": "Privatisations & Ventes", "Nom": "Privatisation de l'Audiovisuel Public (France TV, Radio France)", "Impact_Depenses": -4.0, "Impact_Recettes": 1.0, "Description": "Suppression de la redevance/dotation, vente ponctuelle (lissage 1G€/an sur recettes)."},
-    {"Categorie": "Privatisations & Ventes", "Nom": "Vente des participations de l'État (Renault, Air France, ADP)", "Impact_Depenses": -1.5, "Impact_Recettes": 0.0, "Description": "Le fruit de la vente rembourse la dette, entraînant une baisse annuelle des intérêts (-1.5G€)."}
-]
+    mesures_activees = {}
+    
+    if not df_mesures.empty:
+        categories_mesures = df_mesures["Categorie"].unique()
+        # Création de colonnes dynamiques pour l'affichage (max 3 colonnes)
+        cols_mesures = st.columns(3)
+        
+        for i, categorie in enumerate(categories_mesures):
+            col_target = cols_mesures[i % 3] # Alterne l'affichage sur 3 colonnes
+            with col_target:
+                st.markdown(f"**{categorie}**")
+                mesures_cat = df_mesures[df_mesures["Categorie"] == categorie]
+                for _, row in mesures_cat.iterrows():
+                    nom = row["Nom"]
+                    desc = f"{row['Description']} (Dépenses: {row['Impact_Depenses']} G€ / Recettes: +{row['Impact_Recettes']} G€)"
+                    # Création dynamique de la case à cocher
+                    mesures_activees[nom] = st.checkbox(nom, help=desc)
+    
+    st.markdown("---")
+    
+    # PANNEAUX DÉPENSES ET RECETTES
+    col_depenses, col_recettes = st.columns(2)
+    modifs_dep = {}
+    modifs_rec = {}
+    
+    with col_depenses:
+        st.header("📉 Dépenses de l'État (Missions & Dette)")
+        if not df.empty:
+            missions = df_depenses["Categorie/Mission"].unique()
+            for mission in missions:
+                is_expanded = True if "Financiers" in mission else False
+                with st.expander(f"📁 {mission}", expanded=is_expanded):
+                    programmes = df_depenses[df_depenses["Categorie/Mission"] == mission]
+                    for _, row in programmes.iterrows():
+                        prog = row["Poste/Programme"]
+                        budget = row["Budget_Actuel_G€"]
+                        desc = row.get("Description", "")
+                        modifs_dep[prog] = st.number_input(prog, min_value=0.0, value=float(budget), step=0.1, format="%.1f", help=desc)
+                    
+    with col_recettes:
+        st.header("📈 Recettes Fiscales de Base")
+        if not df.empty:
+            categories_rec = df_recettes["Categorie/Mission"].unique()
+            for cat in categories_rec:
+                with st.expander(f"💰 {cat}", expanded=True):
+                    postes = df_recettes[df_recettes["Categorie/Mission"] == cat]
+                    for _, row in postes.iterrows():
+                        poste = row["Poste/Programme"]
+                        budget = row["Budget_Actuel_G€"]
+                        desc = row.get("Description", "")
+                        modifs_rec[poste] = st.number_input(poste, min_value=0.0, value=float(budget), step=0.1, format="%.1f", help=desc)
 
-# Total is ~38 highly distinct, heavily debated real-world measures. 
-# Attempting to generate strictly 100 would result in redundant or micro-measures that clutter a UI.
-df_mesures = pd.DataFrame(mesures_data)
-csv_filename = "mesures_chocs_france.csv"
-df_mesures.to_csv(csv_filename, index=False, encoding="utf-8-sig")
-print(f"File created with {len(df_mesures)} measures: {csv_filename}")
+    st.markdown("---")
+    submit_button = st.form_submit_button("🚀 Lancer la simulation globale")
+
+# --- LOGIQUE ET RÉSULTATS ---
+if submit_button:
+    
+    # 1. Calculs des curseurs manuels
+    total_depenses_base = sum(modifs_dep.values())
+    total_recettes_base = sum(modifs_rec.values())
+    
+    # 2. Ajout dynamique de l'impact des mesures cochées
+    impact_mesures_depenses = 0.0
+    impact_mesures_recettes = 0.0
+    
+    for nom_mesure, is_checked in mesures_activees.items():
+        if is_checked:
+            ligne_mesure = df_mesures[df_mesures["Nom"] == nom_mesure].iloc[0]
+            impact_mesures_depenses += float(ligne_mesure["Impact_Depenses"])
+            impact_mesures_recettes += float(ligne_mesure["Impact_Recettes"])
+    
+    # Totaux finaux réels
+    total_depenses_reformees = total_depenses_base + impact_mesures_depenses
+    total_recettes_reformees = total_recettes_base + impact_mesures_recettes
+    
+    budget_base_depenses_initial = df_depenses["Budget_Actuel_G€"].sum()
+    budget_base_recettes_initial = df_recettes["Budget_Actuel_G€"].sum()
+    
+    var_depenses = total_depenses_reformees - budget_base_depenses_initial
+    var_recettes = total_recettes_reformees - budget_base_recettes_initial
+    
+    # Impacts macroéconomiques
+    impact_keynesien = 0.0
+    impact_social_cumul = 0.0
+    nb_progs_sociaux = 0
+    
+    for _, row in df_depenses.iterrows():
+        prog = row["Poste/Programme"]
+        variation_curseur = modifs_dep[prog] - row["Budget_Actuel_G€"]
+        
+        if "Dette" not in prog:
+            impact_keynesien += variation_curseur * 0.8
+        
+        if any(keyword in prog.lower() for keyword in ["inclusion", "handicap", "premier degré", "maladie"]):
+            impact_social_cumul += (variation_curseur / row["Budget_Actuel_G€"]) * 100
+            nb_progs_sociaux += 1
+
+    # On ajoute l'effet keynesien des mesures chocs
+    impact_keynesien += (impact_mesures_depenses * 0.8)
+
+    solde = total_recettes_reformees - total_depenses_reformees
+    deficit_pib = (abs(solde) / PIB_BASE) * 100
+    
+    impact_offre = 0.4 if deficit_pib < 3.0 else -0.2
+    croissance_2027 = 1.1 + (impact_keynesien / 15.0) + impact_offre
+
+    score_social = max(0, min(100, 100 + (impact_social_cumul / max(1, nb_progs_sociaux)) * 1.5))
+    if "Retraite à 60 ans (40 annuités)" in mesures_activees and mesures_activees["Retraite à 60 ans (40 annuités)"]: 
+        score_social = min(100, score_social + 15)
+    
+    tol_gauche = 100 if var_recettes > 0 else 30
+    tol_droite = 100 if (var_recettes <= 0 and deficit_pib < 3) else 20
+    tol_centre = 50 + (50 if deficit_pib < 4 else -30)
+    probabilite_politique = max(0, min(100, (tol_gauche * 0.32) + (tol_centre * 0.25) + (tol_droite * 0.43)))
+
+    # --- 3. MOTEUR DE PROFILAGE ---
+    profil = ""
+    politicien = ""
+    ecole_eco = ""
+    description_profil = ""
+
+    if var_depenses < -10 and var_recettes <= 0:
+        profil = "Consolidation & Offre"
+        politicien = "Raymond Barre / François Fillon"
+        ecole_eco = "Ordolibéralisme / École Néoclassique"
+        description_profil = "Réduction franche de la sphère publique et des déficits. Assainissement des finances et compétitivité."
+    elif var_depenses > 15 and var_recettes > 10:
+        profil = "Relance Sociale & Redistribution"
+        politicien = "François Mitterrand (1981) / Front Populaire"
+        ecole_eco = "Keynésianisme Traditionnel"
+        description_profil = "Relance par la demande globale. Hausse de la fiscalité pour financer l'État-Providence."
+    elif var_depenses > 10 and var_recettes <= 0:
+        profil = "Relance par le Déficit"
+        politicien = "Souvent associé au souverainisme économique"
+        ecole_eco = "Théorie Monétaire Moderne (MMT)"
+        description_profil = "Hausse des dépenses sans augmenter les impôts. Dérapage de la dette à surveiller."
+    elif abs(var_depenses) <= 10 and abs(var_recettes) <= 10:
+        profil = "Socio-Libéralisme & Équilibre"
+        politicien = "Emmanuel Macron / Michel Rocard"
+        ecole_eco = "Nouvelle Synthèse Néoclassique"
+        description_profil = "De légers ajustements sans brutaliser les impôts ni l'État social."
+    else:
+        profil = "Approche Hybride"
+        politicien = "Pragmatisme de crise"
+        ecole_eco = "Pragmatisme Macroéconomique"
+        description_profil = "Mélange d'ajustements fiscaux et de coupes ciblées."
+
+    # --- 4. AFFICHAGE DE LA SYNTHÈSE ---
+    st.header("🎯 Synthèse des Arbitrages")
+    
+    col_r1, col_r2, col_r3, col_r4 = st.columns(4)
+    col_r1.metric("Solde de l'État", f"{solde:.1f} G€", f"{deficit_pib:.1f}% du PIB")
+    col_r2.metric("Croissance Estimée (2027)", f"{croissance_2027:.2f}%")
+    col_r3.metric("Faisabilité Politique", f"{probabilite_politique:.0f}/100", "Censure risquée" if probabilite_politique < 40 else "Majorité relative")
+    col_r4.metric("Score Social", f"{score_social:.0f}/100")
+
+    st.markdown("---")
+    st.subheader("🧠 Analyse de votre doctrine budgétaire")
+    st.info(f"**Profil :** {profil} | **Proximité historique :** {politicien} | **École :** {ecole_eco}\n\n{description_profil}")
+
+    if deficit_pib > 3.0:
+        st.error(f"❌ Alerte Européenne : Déficit à {deficit_pib:.1f}%. Procédure pour déficit excessif.")
+    else:
+        st.success(f"🇪🇺 Validé par l'UE : Déficit conforme ({deficit_pib:.1f}%).")
+        
+    st.subheader("⏳ Évolution de la dette (en % du PIB)")
+    annees = [2027, 2030, 2035]
+    ratio_dette = [112.0 + (deficit_pib - 3)*1.2, 115.0 + (deficit_pib - 3)*3.5, 118.0 + (deficit_pib - 3)*6.0]
+    df_traj = pd.DataFrame({"Année": annees, "Dette / PIB (%)": ratio_dette, "Plafond UE (%)": [60, 60, 60]}).set_index("Année")
+    st.line_chart(df_traj)
+
+else:
+    st.info("💡 Sélectionnez vos options et modifiez les montants, puis cliquez sur le bouton 'Lancer la simulation globale'.")

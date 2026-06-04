@@ -41,7 +41,7 @@ with st.form("simulation_form"):
         st.markdown("**Travail & Modèle Social**")
         age_retraite = st.slider("Âge légal de la retraite", min_value=55.0, max_value=70.0, value=64.0, step=0.5)
         temps_travail = st.slider("Temps de travail légal (h/semaine)", min_value=30.0, max_value=45.0, value=35.0, step=0.5)
-        smic_net = st.slider("SMIC net mensuel (€)", min_value=1000, max_value=2500, value=1400, step=50, help="Boost la consommation, mais augmente le coût de l'État et écrase les marges des PME.")
+        smic_net = st.slider("SMIC net mensuel (€)", min_value=1000, max_value=2500, value=1400, step=50)
         
     with col_p2:
         st.markdown("**État & Fiscalité**")
@@ -115,7 +115,6 @@ with st.form("simulation_form"):
 # --- LOGIQUE ET RÉSULTATS ---
 if submit_button:
     
-    # Paramètres d'inflation
     if "Grande Modération" in scenario_inflation:
         inf_rate = 0.02; taux_interet_prime = 0.0; impact_pib_nominal = 1.02
     elif "Post-COVID" in scenario_inflation:
@@ -123,7 +122,6 @@ if submit_button:
     else:
         inf_rate = 0.08; taux_interet_prime = 5.0; impact_pib_nominal = 0.98
 
-    # Calculs de base
     total_depenses_base = sum(modifs_dep.values())
     total_recettes_base = sum(modifs_rec.values())
     
@@ -135,19 +133,31 @@ if submit_button:
             impact_mesures_depenses += float(ligne_mesure["Impact_Depenses"])
             impact_mesures_recettes += float(ligne_mesure["Impact_Recettes"])
             
-    # Impacts structurels (Retraites, Fonction publique, SMIC, Temps de travail)
+    # CALCULS MICRO (Rétablis pour impacter la croissance et le score social)
+    impact_keynesien_micro = 0.0
+    impact_social_cumul = 0.0
+    nb_progs_sociaux = 0
+    
+    for _, row in df_depenses.iterrows():
+        prog = row["Poste/Programme"]
+        variation_curseur = modifs_dep[prog] - row["Budget_Actuel_G€"]
+        
+        if "Dette" not in prog:
+            impact_keynesien_micro += variation_curseur * 0.8
+            
+        if any(keyword in prog.lower() for keyword in ["inclusion", "handicap", "premier degré", "maladie"]):
+            impact_social_cumul += (variation_curseur / row["Budget_Actuel_G€"]) * 100
+            nb_progs_sociaux += 1
+
+    # IMPACTS MACRO
     impact_macro_depenses = (64.0 - age_retraite) * 3.5 
     impact_macro_depenses += (pt_indice * 2.0) + (var_effectifs / 100.0) * 3.5
-    
-    # Coût direct pour l'État d'une hausse du SMIC et de la baisse du temps de travail
     impact_macro_depenses += ((smic_net - 1400) / 100) * 1.5
     impact_macro_depenses += (35.0 - temps_travail) * 2.0
     
-    # IMPACT DU TAUX DIRECTEUR : Charge de la dette
     impact_taux_directeur = (taux_directeur - 3.0) * 2.5
     impact_macro_depenses += impact_taux_directeur
 
-    # Impôts et recettes générées par le temps de travail
     impact_macro_recettes = (taux_tva - 20.0) * 9.0 + (taux_is - 25.0) * 2.5
     impact_macro_recettes += (temps_travail - 35.0) * 2.0
     
@@ -158,20 +168,20 @@ if submit_button:
     var_depenses = total_depenses_reformees - budget_base_depenses_initial
     var_recettes = total_recettes_reformees - df_recettes["Budget_Actuel_G€"].sum()
     
-    # Multiplicateur Keynésien (Boosté par le SMIC)
-    impact_keynesien = (impact_mesures_depenses + impact_macro_depenses - impact_taux_directeur) * 0.8
-    impact_keynesien += ((smic_net - 1400) / 100) * 1.5
+    # MULTIPLICATEUR TOTAL
+    impact_keynesien_total = impact_keynesien_micro + ((impact_mesures_depenses + impact_macro_depenses - impact_taux_directeur) * 0.8)
+    impact_keynesien_total += ((smic_net - 1400) / 100) * 1.5
     
     solde = total_recettes_reformees - total_depenses_reformees
     deficit_pib = (abs(solde) / PIB_BASE) * 100
     
-    # Croissance : Pénalisée par les taux et un SMIC trop lourd pour les PME (Choc d'offre)
     frein_monetaire = (taux_directeur - 3.0) * 0.15
     choc_offre_smic = ((smic_net - 1400) / 100) * 0.1
-    croissance_2027 = (1.1 + (impact_keynesien / 15.0) + (0.4 if deficit_pib < 3.0 else -0.2) - frein_monetaire - choc_offre_smic) * impact_pib_nominal
+    croissance_2027 = (1.1 + (impact_keynesien_total / 15.0) + (0.4 if deficit_pib < 3.0 else -0.2) - frein_monetaire - choc_offre_smic) * impact_pib_nominal
 
-    # Score Social
-    score_social = 100 + (64.0 - age_retraite)*3 + pt_indice*1.5 - (inf_rate*300) - (taux_directeur*1.5)
+    # SCORING POLITIQUE ET SOCIAL
+    base_social = 100 + (impact_social_cumul / max(1, nb_progs_sociaux)) * 1.5
+    score_social = base_social + (64.0 - age_retraite)*3 + pt_indice*1.5 - (inf_rate*300) - (taux_directeur*1.5)
     score_social += ((smic_net - 1400) / 50) * 2
     score_social += (35.0 - temps_travail) * 2
     score_social = max(0, min(100, score_social))
@@ -181,14 +191,24 @@ if submit_button:
     tol_centre = 50 + (50 if deficit_pib < 4 else -30)
     probabilite_politique = max(0, min(100, (tol_gauche * 0.32) + (tol_centre * 0.25) + (tol_droite * 0.43)))
 
-    # --- AFFICHAGE DE LA SYNTHÈSE DES CHIFFRES ---
+    # --- AFFICHAGE ROBUSTE DE LA SYNTHÈSE DES CHIFFRES ---
     st.header("🎯 Synthèse des Arbitrages")
     
     col_r1, col_r2, col_r3, col_r4 = st.columns(4)
-    col_r1.metric("Solde de l'État", f"{solde:.1f} G€", f"{deficit_pib:.1f}% du PIB")
+    
+    col_r1.metric("Solde de l'État", f"{solde:.1f} G€")
+    col_r1.caption(f"**Déficit : {deficit_pib:.1f}% du PIB**")
+    
     col_r2.metric("Croissance Nominale (2027)", f"{croissance_2027:.2f}%")
-    col_r3.metric("Faisabilité Politique", f"{probabilite_politique:.0f}/100", "Censure risquée" if probabilite_politique < 40 else "Majorité relative")
-    col_r4.metric("Score Social (Ajusté)", f"{score_social:.0f}/100")
+    col_r2.caption("Impacts premier et second tour")
+    
+    col_r3.metric("Faisabilité Politique", f"{probabilite_politique:.0f}/100")
+    etat_censure = "🔴 Censure très probable" if probabilite_politique < 40 else ("🟠 Majorité relative" if probabilite_politique < 60 else "🟢 Majorité absolue")
+    col_r3.caption(etat_censure)
+    
+    col_r4.metric("Score Social", f"{score_social:.0f}/100")
+    etat_social = "🔴 Climat insurrectionnel" if score_social < 40 else ("🟠 Tensions sociales" if score_social < 60 else "🟢 Paix sociale")
+    col_r4.caption(etat_social)
 
     # --- 🧠 MOTEUR D'ANALYSE DÉTAILLÉ ---
     st.markdown("---")
@@ -200,8 +220,8 @@ if submit_button:
         ecole_eco = "Ordolibéralisme / École Autrichienne (Monétarisme)"
         analyse_detailed = f"""
         **Votre cap :** Politique de purge budgétaire drastique. Votre priorité est la réduction de la taille de l'État pour restaurer la crédibilité de la signature de la France.
-        *   **Performance & Social :** Votre score social ({score_social:.0f}/100) est mis à rude épreuve par vos décisions sur le temps de travail ou les salaires. Réduire les dépenses provoque un choc de demande.
-        *   **Approbation Politique :** Avec {probabilite_politique:.0f}/100, vous vous appuyez sur un bloc droitier. La gauche s'opposera frontalement à vos mesures via des grèves et des motions de censure.
+        *   **Performance & Social :** Votre score social est mis à rude épreuve par vos décisions sur le temps de travail ou les salaires. Réduire les dépenses provoque un choc de demande.
+        *   **Approbation Politique :** Vous vous appuyez sur un bloc droitier. La gauche s'opposera frontalement à vos mesures via des grèves et des motions de censure.
         *   **Viabilité Long Terme :** C'est votre point fort. À l'horizon 2035, la trajectoire de la dette s'assainit et l'effet d'éviction s'annule, redonnant de l'air à l'investissement privé.
         """
     elif var_depenses > 15 and var_recettes > 15:
@@ -211,7 +231,7 @@ if submit_button:
         analyse_detailed = f"""
         **Votre cap :** Choc massif de demande globale. Vous utilisez l'arme fiscale et la hausse du SMIC pour financer un réinvestissement historique dans le modèle social français.
         *   **Performance & Social :** L'indice social est élevé. Le pouvoir d'achat des classes populaires est fortement soutenu par le cadre salarial et horaire que vous avez défini.
-        *   **Approbation Politique :** Le chemin parlementaire ({probabilite_politique:.0f}/100) sera chaotique face à un bloc central et droitier qui rejettera le 'matraquage fiscal' et les charges pesant sur les PME.
+        *   **Approbation Politique :** Le chemin parlementaire sera chaotique face à un bloc central et droitier qui rejettera le 'matraquage fiscal' et les charges pesant sur les PME.
         *   **Viabilité Long Terme :** Attention au retour de flamme de la dette et des taux directeurs. L'augmentation de vos dépenses risque d'engendrer une fuite des capitaux.
         """
     elif var_depenses > 10 and var_recettes <= 0:
@@ -221,7 +241,7 @@ if submit_button:
         analyse_detailed = f"""
         **Votre cap :** Pari très risqué consistant à augmenter le train de vie de l'État et les salaires minimaux tout en refusant d'augmenter la fiscalité.
         *   **Performance & Social :** À court terme, l'économie est grisée par l'injection de liquidités. 
-        *   **Approbation Politique :** Faisabilité calculée à {probabilite_politique:.0f}/100. L'incohérence comptable finira par bloquer le projet.
+        *   **Approbation Politique :** L'incohérence comptable finira par bloquer le projet.
         *   **Viabilité Long Terme :** Risque de krach obligataire. La courbe de la dette s'envole verticalement, risquant une dégradation immédiate par les agences de notation.
         """
     else:
@@ -229,9 +249,9 @@ if submit_button:
         politicien = "Emmanuel Macron, Michel Rocard ou Jean-Pierre Raffarin"
         ecole_eco = "Nouvelle Synthèse Néoclassique (Modèle Mésange)"
         analyse_detailed = f"""
-        **Votre cap :** Gestionnaire pragmatique. Vous cherchez le point d'équilibre en ajustant les curseurs par petites touches pour stabiliser le déficit, tout en maintenant un cadre de travail (heures, SMIC) proche du statu quo.
+        **Votre cap :** Gestionnaire pragmatique. Vous cherchez le point d'équilibre en ajustant les curseurs par petites touches pour stabiliser le déficit, tout en maintenant un cadre de travail proche du statu quo.
         *   **Performance & Social :** Vous évitez l'effondrement des services publics, tout en exigeant des efforts modérés. C'est un compromis tiède.
-        *   **Approbation Politique :** Votre score ({probabilite_politique:.0f}/100) montre que vous êtes le pivot de l'Assemblée, capable de coalitions de circonstance.
+        *   **Approbation Politique :** Vous êtes le pivot de l'Assemblée, capable de coalitions de circonstance.
         *   **Viabilité Long Terme :** Vous stabilisez la dette à court terme, mais restez à la merci d'une explosion des taux d'intérêt de la BCE.
         """
 

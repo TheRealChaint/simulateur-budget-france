@@ -1,0 +1,30 @@
+﻿Categorie,Nom,Impact_Depenses,Impact_Recettes,Description
+Fiscalité & Entreprises,Rétablissement de l'ISF,0.0,3.5,"Taxation des patrimoines immobiliers et financiers supérieurs à 1,3 M€."
+Fiscalité & Entreprises,Suppression de la Flat Tax (PFU),0.0,1.5,Retour au barème progressif de l'impôt pour les revenus du capital.
+Fiscalité & Entreprises,Taxe sur les superprofits (One-off),0.0,12.0,Taxation exceptionnelle de 33% sur les bénéfices des énergéticiens et grands groupes.
+Fiscalité & Entreprises,"Baisse des impôts de production (CVAE, C3S)",0.0,-8.0,Suppression totale des impôts pesant sur la production des entreprises pour la compétitivité.
+Fiscalité & Entreprises,Légalisation et taxation du cannabis,-0.5,2.5,"Création d'une filière d'État, baisse des frais de justice/police et nouvelles recettes fiscales."
+Fiscalité & Entreprises,Taxe sur les transactions financières (Tobin),0.0,5.0,"Hausse de la TTF à 0,3% élargie au trading haute fréquence et aux produits dérivés."
+Fiscalité & Entreprises,Suppression du Crédit Impôt Recherche (CIR),0.0,7.0,Annulation de cette niche fiscale jugée inefficace pour les grandes entreprises.
+Social,Désindexation des retraites sur l'inflation,-3.5,0.0,Gel ou sous-indexation des pensions de retraite pour freiner la dynamique des dépenses.
+Social,Revenu universel de base (500€/mois),45.0,0.0,Versement inconditionnel (net du remplacement du RSA et prime d'activité).
+Social,Hausse du RSA de 20%,2.5,0.0,Revalorisation des minima sociaux face à l'inflation.
+Social,Conditionnement du RSA à 15h d'activité,-1.0,0.0,Baisse du nombre d'allocataires via radiations et meilleur retour à l'emploi.
+Social,Suppression des allocations familiales au-dessus de 5000€/mois,-0.8,0.0,Fin de l'universalité des allocs pour les hauts revenus.
+Social,Suppression de l'Aide Médicale d'État (AME),-1.2,0.0,Remplacement par une aide médicale d'urgence stricte (AMU).
+État & Fonction Publique,Passage aux 32 heures (Semaine de 4 jours),4.0,-1.5,Embauches supplémentaires dans le public et baisse de cotisations perçues dans le privé.
+État & Fonction Publique,Baisse des subventions aux associations,-1.5,0.0,Coupe budgétaire transversale sur le financement du milieu associatif.
+État & Fonction Publique,Division par 2 des subventions syndicales et patronales,-0.1,0.0,Baisse du financement public des partenaires sociaux.
+État & Fonction Publique,Suppression du Sénat et du CESE,-0.4,0.0,Réforme constitutionnelle pour un parlement monocaméral.
+Écologie & Transports,Plan de rénovation thermique massif (1M de logements/an),10.0,0.0,Prise en charge à 100% pour les plus modestes (reste à charge 0).
+Écologie & Transports,Gratuité des transports en commun régionaux,3.5,0.0,"Compensation par l'État du manque à gagner pour les régions (TER, métros)."
+Écologie & Transports,Nationalisation des autoroutes,2.5,3.0,Rachat des concessions (coût amorti sur dette) et récupération des péages (+3G€ recettes).
+Écologie & Transports,Taxe carbone aux frontières de la France,0.0,4.0,Taxe douanière sur les produits hors UE fortement émetteurs.
+Écologie & Transports,Relance d'un programme de 10 nouveaux réacteurs EPR,4.0,0.0,Investissement massif de l'État (via EDF) dans le nucléaire.
+Écologie & Transports,Suppression des subventions aux énergies fossiles,-3.5,0.0,Fin de la détaxation du gazole routier et agricole.
+Défense & Souveraineté,Passage du budget de la Défense à 3% du PIB,14.0,0.0,"Économie de guerre, réarmement lourd, nouvelles brigades."
+Défense & Souveraineté,Rétablissement du Service Militaire Obligatoire (6 mois),4.5,0.0,"Encadrement, infrastructures et solde pour l'ensemble d'une classe d'âge."
+Défense & Souveraineté,Frexit / Baisse contribution à l'UE,-8.0,-6.0,"Baisse de la contribution nette (économie 8G€) mais perte de financements européens (PAC, fonds régionaux)."
+Défense & Souveraineté,Préférence nationale pour les aides sociales,-4.0,0.0,Conditionner les aides familiales et le RSA à 5 ans de présence légale pour les étrangers.
+Privatisations & Ventes,"Privatisation de l'Audiovisuel Public (France TV, Radio France)",-4.0,1.0,"Suppression de la redevance/dotation, vente ponctuelle (lissage 1G€/an sur recettes)."
+Privatisations & Ventes,"Vente des participations de l'État (Renault, Air France, ADP)",-1.5,0.0,"Le fruit de la vente rembourse la dette, entraînant une baisse annuelle des intérêts (-1.5G€)."

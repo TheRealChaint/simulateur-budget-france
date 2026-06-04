@@ -1,66 +1,191 @@
+import streamlit as st
 import pandas as pd
 
-# Recreating the dataset with a "Description" column
-data = [
-    # --- EXPENSES (DEPENSES) ---
-    {"Type": "Depense", "Categorie/Mission": "Enseignement Scolaire", "Poste/Programme": "P140 - Enseignement public du premier degré", "Budget_Actuel_G€": 26.5, "Description": "Écoles maternelles et élémentaires : salaires des professeurs des écoles, fonctionnement."},
-    {"Type": "Depense", "Categorie/Mission": "Enseignement Scolaire", "Poste/Programme": "P141 - Enseignement public du second degré", "Budget_Actuel_G€": 39.0, "Description": "Collèges et lycées : salaires des professeurs certifiés et agrégés, fonctionnement."},
-    {"Type": "Depense", "Categorie/Mission": "Enseignement Scolaire", "Poste/Programme": "P230 - Vie de l'élève", "Budget_Actuel_G€": 6.5, "Description": "AESH (accompagnants handicap), assistants d'éducation (pions), bourses, médecine scolaire."},
-    {"Type": "Depense", "Categorie/Mission": "Enseignement Scolaire", "Poste/Programme": "P139 - Enseignement privé", "Budget_Actuel_G€": 9.0, "Description": "Financement public des écoles privées sous contrat (principalement les salaires des enseignants)."},
-    {"Type": "Depense", "Categorie/Mission": "Enseignement Scolaire", "Poste/Programme": "P214 - Soutien de la politique de l'éducation nationale", "Budget_Actuel_G€": 3.0, "Description": "Administration centrale, rectorats, logistique, organisation des concours et examens."},
-    
-    {"Type": "Depense", "Categorie/Mission": "Défense", "Poste/Programme": "P178 - Préparation et emploi des forces", "Budget_Actuel_G€": 15.0, "Description": "Entraînement des armées, maintien en condition, dissuasion nucléaire, opérations extérieures (OPEX)."},
-    {"Type": "Depense", "Categorie/Mission": "Défense", "Poste/Programme": "P146 - Équipement des forces", "Budget_Actuel_G€": 19.0, "Description": "Achat et modernisation du matériel militaire (avions Rafale, sous-marins, blindés Griffon, munitions)."},
-    {"Type": "Depense", "Categorie/Mission": "Défense", "Poste/Programme": "P144 - Environnement et prospective de la politique de défense", "Budget_Actuel_G€": 3.2, "Description": "Services de renseignement (DGSE), recherche et innovation de défense, diplomatie militaire."},
-    {"Type": "Depense", "Categorie/Mission": "Défense", "Poste/Programme": "P212 - Soutien de la politique de défense", "Budget_Actuel_G€": 5.8, "Description": "Infrastructures militaires, bases de défense, systèmes d'information, gestion des ressources humaines."},
-    
-    {"Type": "Depense", "Categorie/Mission": "Sécurités", "Poste/Programme": "P176 - Police nationale", "Budget_Actuel_G€": 12.5, "Description": "Salaires et équipements des policiers, fonctionnement des commissariats, sécurité publique et maintien de l'ordre."},
-    {"Type": "Depense", "Categorie/Mission": "Sécurités", "Poste/Programme": "P152 - Gendarmerie nationale", "Budget_Actuel_G€": 11.5, "Description": "Salaires et équipements des gendarmes, casernes, sécurité en zone rurale et périurbaine."},
-    {"Type": "Depense", "Categorie/Mission": "Sécurités", "Poste/Programme": "P207 - Sécurité et éducation routières", "Budget_Actuel_G€": 1.0, "Description": "Entretien des radars automatiques, permis de conduire, campagnes nationales de prévention routière."},
-    
-    {"Type": "Depense", "Categorie/Mission": "Justice", "Poste/Programme": "P166 - Justice judiciaire", "Budget_Actuel_G€": 5.2, "Description": "Fonctionnement des tribunaux, salaires des magistrats et greffiers, frais de justice (expertises)."},
-    {"Type": "Depense", "Categorie/Mission": "Justice", "Poste/Programme": "P107 - Administration pénitentiaire", "Budget_Actuel_G€": 4.8, "Description": "Fonctionnement des prisons, salaires des surveillants, construction et rénovation des centres pénitentiaires."},
-    {"Type": "Depense", "Categorie/Mission": "Justice", "Poste/Programme": "P182 - Protection judiciaire de la jeunesse", "Budget_Actuel_G€": 1.2, "Description": "Centres éducatifs fermés, prise en charge et réinsertion des mineurs délinquants."},
-    
-    {"Type": "Depense", "Categorie/Mission": "Solidarité, insertion et égalité des chances", "Poste/Programme": "P304 - Inclusion sociale et lutte contre la pauvreté", "Budget_Actuel_G€": 14.2, "Description": "Prime d'activité, RSA (compensation à l'État), aide alimentaire, hébergement d'urgence (Samu social)."},
-    {"Type": "Depense", "Categorie/Mission": "Solidarité, insertion et égalité des chances", "Poste/Programme": "P157 - Handicap et dépendance", "Budget_Actuel_G€": 16.5, "Description": "Allocation aux adultes handicapés (AAH), aides à l'emploi en ESAT."},
-    
-    {"Type": "Depense", "Categorie/Mission": "Santé", "Poste/Programme": "P183 - Protection maladie (AME, etc.)", "Budget_Actuel_G€": 1.4, "Description": "Aide Médicale d'État (AME) pour les étrangers en situation irrégulière, fonds d'indemnisation."},
-    {"Type": "Depense", "Categorie/Mission": "Santé", "Poste/Programme": "P204 - Prévention, sécurité sanitaire et offre de soins", "Budget_Actuel_G€": 0.8, "Description": "Financement des Agences Régionales de Santé (ARS), Santé Publique France, campagnes de prévention."},
-    
-    {"Type": "Depense", "Categorie/Mission": "Travail et emploi", "Poste/Programme": "P102 - Accès et retour à l'emploi", "Budget_Actuel_G€": 13.5, "Description": "Subvention à France Travail (ex-Pôle Emploi), missions locales, financement des contrats aidés et de l'apprentissage."},
-    {"Type": "Depense", "Categorie/Mission": "Travail et emploi", "Poste/Programme": "P103 - Accompagnement des mutations économiques et développement de l'emploi", "Budget_Actuel_G€": 5.2, "Description": "Dispositifs d'activité partielle (chômage partiel), FNE-Formation, soutien à la reconversion."},
-    
-    {"Type": "Depense", "Categorie/Mission": "Écologie, développement et mobilité durables", "Poste/Programme": "P203 - Infrastructures et services de transports", "Budget_Actuel_G€": 5.1, "Description": "Entretien du réseau ferré (SNCF Réseau), des routes nationales non concédées et des canaux."},
-    {"Type": "Depense", "Categorie/Mission": "Écologie, développement et mobilité durables", "Poste/Programme": "P174 - Énergie, climat et après-mines", "Budget_Actuel_G€": 6.2, "Description": "Chèque énergie, bonus écologique pour véhicules électriques, subventions aux énergies renouvelables."},
-    {"Type": "Depense", "Categorie/Mission": "Écologie, développement et mobilité durables", "Poste/Programme": "P113 - Paysages, eau et biodiversité", "Budget_Actuel_G€": 1.3, "Description": "Parcs nationaux, financement des agences de l'eau, Office français de la biodiversité (OFB)."},
-    
-    {"Type": "Depense", "Categorie/Mission": "Recherche et enseignement supérieur", "Poste/Programme": "P150 - Formations supérieures et recherche universitaire", "Budget_Actuel_G€": 16.2, "Description": "Fonctionnement des universités, salaires des enseignants-chercheurs, aides étudiantes (bourses CROUS)."},
-    {"Type": "Depense", "Categorie/Mission": "Recherche et enseignement supérieur", "Poste/Programme": "P172 - Recherches scientifiques et technologiques pluridisciplinaires", "Budget_Actuel_G€": 8.8, "Description": "Organismes de recherche (CNRS, INSERM, INRAE, CEA civil), Agence nationale de la recherche (ANR)."},
-    
-    {"Type": "Depense", "Categorie/Mission": "Cohésion des territoires", "Poste/Programme": "P135 - Urbanisme, territoires et amélioration de l'habitat", "Budget_Actuel_G€": 3.8, "Description": "Aides personnelles au logement (APL), financement de la rénovation énergétique (MaPrimeRénov')."},
-    {"Type": "Depense", "Categorie/Mission": "Cohésion des territoires", "Poste/Programme": "P119 - Concours financiers aux collectivités territoriales", "Budget_Actuel_G€": 27.5, "Description": "Dotations globales de fonctionnement (DGF) versées par l'État aux communes, départements et régions."},
-    
-    {"Type": "Depense", "Categorie/Mission": "Culture & Médias", "Poste/Programme": "P175 - Patrimoines", "Budget_Actuel_G€": 1.2, "Description": "Entretien des monuments historiques, musées nationaux (Louvre, Orsay), archives de France."},
-    {"Type": "Depense", "Categorie/Mission": "Culture & Médias", "Poste/Programme": "P131 - Création", "Budget_Actuel_G€": 1.0, "Description": "Soutien au spectacle vivant (opéras, théâtres nationaux), arts plastiques, écoles d'art."},
-    {"Type": "Depense", "Categorie/Mission": "Culture & Médias", "Poste/Programme": "P180 - Presse et médias", "Budget_Actuel_G€": 0.9, "Description": "Aides directes à la presse, financement de l'audiovisuel public (France TV, Radio France) via la dotation de l'État."},
-    
-    {"Type": "Depense", "Categorie/Mission": "Action extérieure de l'État & Aide au développement", "Poste/Programme": "P105 - Action de la France en Europe et dans le monde", "Budget_Actuel_G€": 3.2, "Description": "Réseau diplomatique (ambassades, consulats), instituts français, contributions aux organisations internationales (ONU)."},
-    {"Type": "Depense", "Categorie/Mission": "Action extérieure de l'État & Aide au développement", "Poste/Programme": "P209 - Solidarité à l'égard des pays en développement", "Budget_Actuel_G€": 4.5, "Description": "Aide publique au développement (via l'AFD), fonds bilatéraux, aide humanitaire d'urgence."},
-    
-    {"Type": "Depense", "Categorie/Mission": "Agriculture, alimentation, forêt et affaires rurales", "Poste/Programme": "P149 - Compétitivité et durabilité de l'agriculture", "Budget_Actuel_G€": 1.9, "Description": "Cofinancement national des aides PAC, assurance récolte (aléas climatiques), aides à l'installation des jeunes agriculteurs."},
-    {"Type": "Depense", "Categorie/Mission": "Agriculture, alimentation, forêt et affaires rurales", "Poste/Programme": "P206 - Sécurité et qualité sanitaire de l'alimentation", "Budget_Actuel_G€": 0.9, "Description": "Services vétérinaires, contrôles sanitaires dans l'industrie agroalimentaire, lutte contre les épizooties (grippe aviaire)."},
+# Configuration de la page
+st.set_page_config(page_title="Simulateur Budgétaire", layout="wide")
 
-    # --- REVENUES (RECETTES) ---
-    {"Type": "Recette", "Categorie/Mission": "Impôts Directs", "Poste/Programme": "Impôt sur le revenu (IR)", "Budget_Actuel_G€": 94.5, "Description": "Impôt direct progressif prélevé sur les revenus des personnes physiques (salaires, pensions, revenus fonciers)."},
-    {"Type": "Recette", "Categorie/Mission": "Impôts Directs", "Poste/Programme": "Impôt sur les sociétés (IS)", "Budget_Actuel_G€": 61.2, "Description": "Impôt direct prélevé sur les bénéfices réalisés par les entreprises fonctionnant en société."},
-    {"Type": "Recette", "Categorie/Mission": "Impôts Indirects", "Poste/Programme": "Taxe sur la valeur ajoutée (TVA - Part État)", "Budget_Actuel_G€": 102.8, "Description": "Impôt indirect sur la consommation. Montant correspondant uniquement à la part non reversée à la sécurité sociale ou aux collectivités."},
-    {"Type": "Recette", "Categorie/Mission": "Impôts Indirects", "Poste/Programme": "Taxe intérieure de consommation sur les produits énergétiques (TICPE - Part État)", "Budget_Actuel_G€": 17.5, "Description": "Taxe perçue sur les carburants (essence, gazole) et les combustibles de chauffage."},
-    {"Type": "Recette", "Categorie/Mission": "Autres Fiscalités", "Poste/Programme": "Enregistrement, timbres, ISF/IFI et autres taxes directes", "Budget_Actuel_G€": 28.3, "Description": "Impôt sur la fortune immobilière (IFI), droits de mutation (frais de notaires), taxes foncières résiduelles."},
-    {"Type": "Recette", "Categorie/Mission": "Recettes Non Fiscales", "Poste/Programme": "Dividendes, produits du domaine de l'État et amendes", "Budget_Actuel_G€": 24.2, "Description": "Revenus de l'État actionnaire (EDF, Renault...), redevances, revenus du domaine public, produit des amendes routières."}
-]
+st.title("🇫🇷 Simulateur d'Arbitrages Budgétaires (en Milliards d'Euros)")
+st.write("Ajustez les budgets des programmes et les recettes fiscales de l'État par paliers de 0,1 G€. Survolez le petit `?` pour voir le détail des programmes.")
 
-df = pd.DataFrame(data)
-csv_filename = "nomenclature_budget_france.csv"
-df.to_csv(csv_filename, index=False, encoding="utf-8-sig")
-print(f"File updated successfully as {csv_filename}")
+# --- CHARGEMENT DU FICHIER CSV ---
+@st.cache_data
+def load_data():
+    try:
+        return pd.read_csv("nomenclature_budget_france.csv")
+    except Exception as e:
+        st.error("⚠️ Fichier introuvable. Veuillez placer 'nomenclature_budget_france.csv' dans le même dossier.")
+        # Ajout de la colonne Description dans la gestion d'erreur au cas où
+        return pd.DataFrame(columns=["Type", "Categorie/Mission", "Poste/Programme", "Budget_Actuel_G€", "Description"])
+
+df = load_data()
+df_depenses = df[df["Type"] == "Depense"]
+df_recettes = df[df["Type"] == "Recette"]
+
+# Données incompressibles et macro
+DEPENSES_INCOMPRESSIBLES = {"Charge de la Dette (Intérêts)": 61.0, "Pensions de l'État": 66.0}
+PIB_BASE = 2920.0
+
+# --- INTERFACE EN 2 PANS (FORMULAIRE) ---
+with st.form("simulation_form"):
+    
+    col_depenses, col_recettes = st.columns(2)
+    
+    modifs_dep = {}
+    modifs_rec = {}
+    
+    # PAN GAUCHE : DÉPENSES
+    with col_depenses:
+        st.header("📉 Dépenses de l'État")
+        
+        missions = df_depenses["Categorie/Mission"].unique()
+        for mission in missions:
+            with st.expander(f"📁 {mission}", expanded=False):
+                programmes = df_depenses[df_depenses["Categorie/Mission"] == mission]
+                for _, row in programmes.iterrows():
+                    prog = row["Poste/Programme"]
+                    budget = row["Budget_Actuel_G€"]
+                    # Récupération de la description si elle existe, sinon texte vide
+                    description = row.get("Description", "Détail non disponible pour ce programme.")
+                    
+                    # AJOUT DE LA BULLE D'INFO VIA LE PARAMÈTRE `help`
+                    modifs_dep[prog] = st.number_input(
+                        prog, 
+                        min_value=0.0, 
+                        value=float(budget), 
+                        step=0.1, 
+                        format="%.1f",
+                        help=description
+                    )
+                    
+    # PAN DROIT : RECETTES
+    with col_recettes:
+        st.header("📈 Recettes Fiscales")
+        
+        categories_rec = df_recettes["Categorie/Mission"].unique()
+        for cat in categories_rec:
+            with st.expander(f"💰 {cat}", expanded=True):
+                postes = df_recettes[df_recettes["Categorie/Mission"] == cat]
+                for _, row in postes.iterrows():
+                    poste = row["Poste/Programme"]
+                    budget = row["Budget_Actuel_G€"]
+                    description = row.get("Description", "Détail non disponible pour cette recette.")
+                    
+                    # AJOUT DE LA BULLE D'INFO VIA LE PARAMÈTRE `help`
+                    modifs_rec[poste] = st.number_input(
+                        poste, 
+                        min_value=0.0, 
+                        value=float(budget), 
+                        step=0.1, 
+                        format="%.1f",
+                        help=description
+                    )
+
+    st.markdown("---")
+    submit_button = st.form_submit_button("🚀 Lancer la simulation globale")
+
+# --- LOGIQUE ET RÉSULTATS ---
+if submit_button:
+    
+    # 1. Calculs de base
+    total_depenses_reformees = sum(modifs_dep.values())
+    total_recettes_reformees = sum(modifs_rec.values())
+    
+    budget_base_depenses = df_depenses["Budget_Actuel_G€"].sum()
+    budget_base_recettes = df_recettes["Budget_Actuel_G€"].sum()
+    
+    var_depenses = total_depenses_reformees - budget_base_depenses
+    var_recettes = total_recettes_reformees - budget_base_recettes
+    
+    impact_keynesien = 0.0
+    impact_social_cumul = 0.0
+    nb_progs_sociaux = 0
+    
+    for _, row in df_depenses.iterrows():
+        prog = row["Poste/Programme"]
+        variation = modifs_dep[prog] - row["Budget_Actuel_G€"]
+        impact_keynesien += variation * 0.8
+        
+        if any(keyword in prog.lower() for keyword in ["inclusion", "handicap", "premier degré", "maladie"]):
+            impact_social_cumul += (variation / row["Budget_Actuel_G€"]) * 100
+            nb_progs_sociaux += 1
+
+    total_depenses = total_depenses_reformees + sum(DEPENSES_INCOMPRESSIBLES.values())
+    solde = total_recettes_reformees - total_depenses
+    deficit_pib = (abs(solde) / PIB_BASE) * 100
+    
+    impact_offre = 0.4 if deficit_pib < 3.0 else -0.2
+    croissance_2027 = 1.1 + (impact_keynesien / 15.0) + impact_offre
+
+    score_social = max(0, min(100, 100 + (impact_social_cumul / max(1, nb_progs_sociaux)) * 1.5))
+    
+    tol_gauche = 100 if var_recettes > 0 else 30
+    tol_droite = 100 if (var_recettes <= 0 and deficit_pib < 3) else 20
+    tol_centre = 50 + (50 if deficit_pib < 4 else -30)
+    probabilite_politique = max(0, min(100, (tol_gauche * 0.32) + (tol_centre * 0.25) + (tol_droite * 0.43)))
+
+    # --- 2. MOTEUR DE PROFILAGE POLITIQUE ET ÉCONOMIQUE ---
+    profil = ""
+    politicien = ""
+    ecole_eco = ""
+    description_profil = ""
+
+    if var_depenses < -10 and var_recettes <= 0:
+        profil = "Consolidation & Offre"
+        politicien = "Raymond Barre ou François Fillon (2017)"
+        ecole_eco = "Ordolibéralisme / École Néoclassique"
+        description_profil = "Votre stratégie repose sur une réduction franche de la sphère publique et des déficits. Vous privilégiez l'assainissement des finances et la compétitivité (baisse des charges/impôts), quitte à accepter un choc social et politique à court terme."
+    elif var_depenses > 15 and var_recettes > 10:
+        profil = "Relance Sociale & Redistribution"
+        politicien = "François Mitterrand (1981) ou Programme du NFP"
+        ecole_eco = "Keynésianisme Traditionnel"
+        description_profil = "Vous menez une politique de relance par la demande globale. En assumant une hausse de la fiscalité, vous financez un État-Providence fort. Le score social est excellent, mais la pression fiscale risque de braquer la droite parlementaire et de créer des fuites de capitaux."
+    elif var_depenses > 10 and var_recettes <= 0:
+        profil = "Relance par le Déficit"
+        politicien = "Modèle atypique (approche souverainiste ou post-crise COVID)"
+        ecole_eco = "Théorie Monétaire Moderne (MMT) ou Keynésianisme de l'offre"
+        description_profil = "Vous augmentez les dépenses sans augmenter les impôts. C'est une politique du 'Quoi qu'il en coûte'. La croissance de court terme est boostée, mais le dérapage de la dette alerte l'Union Européenne et risque de faire exploser la charge de la dette future."
+    elif abs(var_depenses) <= 10 and abs(var_recettes) <= 10:
+        profil = "Socio-Libéralisme & Équilibre"
+        politicien = "Emmanuel Macron (2017) ou Michel Rocard"
+        ecole_eco = "Nouvelle Synthèse Néoclassique"
+        description_profil = "Vous optez pour le compromis. De légers ajustements de structure sans brutaliser ni les impôts ni l'État social. Votre faisabilité politique est maximale au centre, mais votre marge de manœuvre face à la dette reste très étroite à l'horizon 2030."
+    else:
+        profil = "Approche Hybride"
+        politicien = "Jacques Chirac ou Nicolas Sarkozy"
+        ecole_eco = "Pragmatisme Macroéconomique"
+        description_profil = "Votre budget mêle des éléments contradictoires (ex: hausse des impôts mais baisse des dépenses ciblées). C'est un budget de gestion de crise qui cherche à ménager toutes les oppositions, au risque de manquer de lisibilité économique."
+
+    # --- 3. AFFICHAGE DE LA SYNTHÈSE ---
+    st.header("🎯 Synthèse des Arbitrages")
+    
+    col_r1, col_r2, col_r3, col_r4 = st.columns(4)
+    col_r1.metric("Solde de l'État", f"{solde:.1f} G€", f"{deficit_pib:.1f}% du PIB")
+    col_r2.metric("Croissance Estimée (2027)", f"{croissance_2027:.2f}%")
+    col_r3.metric("Faisabilité Politique", f"{probabilite_politique:.0f}/100", "Risque de censure" if probabilite_politique < 40 else "Majorité relative")
+    col_r4.metric("Score Social", f"{score_social:.0f}/100")
+
+    # Affichage du profil généré
+    st.markdown("---")
+    st.subheader("🧠 Analyse de votre doctrine budgétaire")
+    st.info(f"""
+    **Profil identifié :** {profil}  
+    **Proximité historique :** {politicien}  
+    **École économique :** {ecole_eco}
+    
+    **Analyse :** {description_profil}
+    """)
+
+    # Conformité UE et Dette
+    if deficit_pib > 3.0:
+        st.error(f"❌ Alerte Européenne : Déficit à {deficit_pib:.1f}%, procédure pour déficit excessif hautement probable.")
+    else:
+        st.success(f"🇪🇺 Validé par l'UE : Déficit conforme aux critères ({deficit_pib:.1f}%).")
+        
+    st.subheader("⏳ Évolution de la dette long-terme")
+    annees = [2027, 2030, 2035]
+    ratio_dette = [112.0 + (deficit_pib - 3)*1.2, 115.0 + (deficit_pib - 3)*3.5, 118.0 + (deficit_pib - 3)*6.0]
+    df_traj = pd.DataFrame({"Année": annees, "Dette / PIB (%)": ratio_dette, "Plafond UE (%)": [60, 60, 60]}).set_index("Année")
+    st.line_chart(df_traj)
+
+else:
+    st.info("💡 Modifiez les montants dans les panneaux ci-dessus puis cliquez sur le bouton 'Lancer la simulation globale' pour afficher la synthèse.")
